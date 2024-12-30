@@ -1,5 +1,3 @@
----
-
 # 🚀 **BlockchainDonationSystem**
 
 > 基于区块链技术的公益捐赠透明化管理系统  
