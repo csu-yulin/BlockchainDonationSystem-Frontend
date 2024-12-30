@@ -1,5 +1,3 @@
-下面是针对你的需求修改后的项目文档，前端部分更新为基于 Vue 3 和 JavaScript 的 GitHub 项目展示：
-
 ---
 
 # 🚀 **BlockchainDonationSystem**
