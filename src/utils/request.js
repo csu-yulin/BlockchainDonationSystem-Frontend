@@ -10,7 +10,6 @@ const instance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    // 可在此添加额外的请求头配置，例如 Authorization（如果后续需要）
     return config
   },
   (error) => {

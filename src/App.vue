@@ -1,19 +1,18 @@
 <template>
-  <!-- 导航栏 -->
   <NavBar />
 
-  <!-- 添加容器，预留导航栏高度 -->
-  <!--  <div class="pt-16">-->
   <div class="pt-[68px]">
-    <Transition
-      mode="out-in"
-      name="page"
-      @enter="enter"
-      @leave="leave"
-      @before-enter="beforeEnter"
-    >
-      <router-view />
-    </Transition>
+    <router-view v-slot="{ Component }">
+      <Transition
+        mode="out-in"
+        name="page"
+        @enter="enter"
+        @leave="leave"
+        @before-enter="beforeEnter"
+      >
+        <component :is="Component" />
+      </Transition>
+    </router-view>
   </div>
 </template>
 

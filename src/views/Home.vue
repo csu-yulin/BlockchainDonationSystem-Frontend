@@ -3,11 +3,17 @@
     <!-- 英雄区 -->
     <section class="relative h-screen flex items-center justify-center overflow-hidden">
       <div class="absolute inset-0 z-0">
+        <!-- 渐变色占位 -->
+        <div
+          v-if="!isHeroImageLoaded"
+          class="absolute inset-0 bg-gradient-to-b from-gray-900 to-gray-800"
+        />
         <img
           :style="{ transform: `translateY(${scrollOffset * 0.3}px)` }"
           alt="Hero Background"
           class="w-full h-full object-cover opacity-70 transition-transform duration-1000"
-          src="https://hopechain.oss-cn-chengdu.aliyuncs.com/front/hero.jpg"
+          src="@/assets/images/hero.jpg"
+          @load="isHeroImageLoaded = true"
         />
       </div>
       <div
@@ -75,11 +81,13 @@
             :ref="(el) => (projectCardRefs[index] = el)"
             class="card bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
           >
-            <img
-              :alt="project.title"
-              :src="project.image"
-              class="w-full h-56 object-cover"
-            />
+            <div class="relative w-full h-56 bg-gray-200">
+              <img
+                :alt="project.title"
+                :src="project.image"
+                class="w-full h-56 object-cover"
+              />
+            </div>
             <div class="p-6">
               <h3 class="text-2xl font-semibold text-gray-900">
                 {{ project.title }}
@@ -116,6 +124,9 @@ gsap.registerPlugin(ScrollTrigger)
 // 滚动视差
 const {y: scrollOffset} = useScroll(window)
 
+// 控制英雄区背景图加载状态
+const isHeroImageLoaded = ref(false)
+
 // 数据统计值
 const statsStore = useStatsStore()
 const donationCount = ref(statsStore.donationCount)
@@ -134,7 +145,7 @@ const projects = ref([
   {
     title: '教育援助计划',
     description: '为偏远地区儿童提供教育资源。',
-    image: new URL('@/assets/images/monstera-8957004_640.jpg', import.meta.url).href, // Vite 推荐的图片导入方式
+    image: new URL('@/assets/images/monstera-8957004_640.jpg', import.meta.url).href,
   },
   {
     title: '医疗救助项目',
@@ -148,18 +159,29 @@ const projects = ref([
   },
 ])
 
-// 加载模拟数据
-// TODO: 这里可以替换为真实的 API 调用，但是数据库里的数据很少，为了效果好看，依旧使用模拟数据
-// const loadMockData = () => {
-//   gsap.to(donationCount, {value: 12800, duration: 2, ease: 'power2.out', roundProps: 'value'})
-//   gsap.to(projectCount, {value: 42, duration: 2, ease: 'power2.out', roundProps: 'value'})
-//   gsap.to(userCount, {value: 6700, duration: 2, ease: 'power2.out', roundProps: 'value'})
-// }
+// 预加载图片
+const preloadImages = async () => {
+  const imageUrls = [
+    new URL('@/assets/images/hero.jpg', import.meta.url).href,
+    new URL('@/assets/images/monstera-8957004_640.jpg', import.meta.url).href,
+  ]
+
+  const loadImage = (url) =>
+    new Promise((resolve) => {
+      const img = new Image()
+      img.src = url
+      img.onload = resolve
+      img.onerror = resolve // 即使加载失败也继续
+    })
+
+  await Promise.all(imageUrls.map(loadImage))
+}
 
 onMounted(async () => {
-  // loadMockData()
+  // 预加载图片
+  await preloadImages()
 
-  // 加载统计数据（仅在未加载时请求）
+  // 加载统计数据
   await statsStore.loadStats()
 
   // 同步 store 数据到本地 ref，并添加动画
@@ -181,20 +203,6 @@ onMounted(async () => {
     ease: 'power2.out',
     roundProps: 'value',
   })
-
-  // 项目卡片逐个淡入
-  // gsap.from(projectCardRefs.value, {
-  //   opacity: 0,
-  //   y: 50,
-  //   duration: 1,
-  //   stagger: 0.3,
-  //   ease: 'power2.out',
-  //   scrollTrigger: {
-  //     trigger: projectSection.value,
-  //     start: 'top 80%',
-  //     toggleActions: 'play none none none',
-  //   },
-  // })
 
   // 数据统计动画
   gsap.from([donationCountEl.value, projectCountEl.value, userCountEl.value], {

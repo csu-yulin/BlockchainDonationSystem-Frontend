@@ -4,6 +4,8 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from '@/App.vue'
 import router from '@/router'
 import '@/style/style.css' // 引入 Tailwind 样式
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css' // 引入 Element Plus 样式
 
 // 创建 Vue 应用实例
 const app = createApp(App)
@@ -15,6 +17,7 @@ pinia.use(piniaPluginPersistedstate)
 // 注册插件
 app.use(pinia)       // 状态管理
 app.use(router)      // 路由
+app.use(ElementPlus)
 
 // 挂载应用
 app.mount('#app')

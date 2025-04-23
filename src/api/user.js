@@ -30,6 +30,11 @@ export default {
   loginByPhone(data) {
     return request.post('/user/login/phone', data)
   },
+  // 手机号登录
+  loginByEmail(data) {
+    return request.post('/user/login/email', data)
+  },
+
 
   // 公益组织注册
   registerOrganization(data) {
