@@ -22,4 +22,9 @@ export default {
   getVoucherByIpfs(ipfsHash) {
     return request.get('/voucher/by-ipfs', {params: {ipfsHash}})
   },
+
+  // 根据项目ID查询凭证列表
+  getVouchersByProjectId(projectId) {
+    return request.get(`/voucher/by-project/${projectId}`)
+  },
 }

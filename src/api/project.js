@@ -24,4 +24,18 @@ export default {
   getProjectCount() {
     return request.get('/project/count')
   },
+  // 根据orgId获取项目统计数据
+  getProjectStatsByOrgId(orgId) {
+    return request.get(`/project/stats/${orgId}`)
+  },
+  // 上传项目封面
+  uploadCover(formData) {
+    return request.post('/project/cover', formData, {
+      headers: {'Content-Type': 'multipart/form-data'},
+    })
+  },
+  // 随机获取3个项目
+  getRandomProjects() {
+    return request.get('/project/random')
+  },
 }

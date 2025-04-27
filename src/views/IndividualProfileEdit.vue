@@ -75,10 +75,7 @@
             <label class="block text-gray-600 text-sm mb-1">用户状态</label>
             <div class="flex items-center justify-center md:justify-start gap-2">
               <span
-                :class="{
-                  'bg-green-100 text-green-700': form.status === 'ACTIVE',
-                  'bg-gray-100 text-gray-700': form.status === 'INACTIVE'
-                }"
+                :class="{ 'bg-green-100 text-green-700': form.status === 'ACTIVE', 'bg-gray-100 text-gray-700': form.status === 'INACTIVE' }"
                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
               >
                 <svg
@@ -369,20 +366,20 @@
             class="space-y-4"
           >
             <div
-              v-for="(record, index) in form.donationHistory"
-              :key="index"
+              v-for="(record, index) in displayedDonationHistory"
+              :key="record.donationId"
               class="p-4 bg-indigo-50 rounded-lg shadow-sm"
             >
               <div class="flex justify-between items-center">
                 <div>
                   <p class="text-gray-900 font-medium">
-                    {{ record.projectName }}
+                    {{ projectNames[record.projectId] || `项目ID: ${record.projectId}` }}
                   </p>
                   <p class="text-gray-600 text-sm">
-                    捐赠金额：¥{{ record.amount }}
+                    捐赠金额：¥{{ record.amount.toFixed(2) }}
                   </p>
                   <p class="text-gray-500 text-xs">
-                    时间：{{ formatDate(record.date) }}
+                    时间：{{ formatDate(record.timestamp) }}
                   </p>
                 </div>
                 <button
@@ -397,11 +394,27 @@
                   v-if="historyDetails.donation[index]"
                   class="mt-2 text-gray-600 text-sm"
                 >
-                  <p>交易哈希：{{ record.txHash }}</p>
-                  <p>备注：{{ record.note || '无' }}</p>
+                  <p class="truncate">
+                    交易哈希：{{ record.txHash }}
+                  </p>
+                  <p>捐赠ID：{{ record.donationId }}</p>
                 </div>
               </transition>
             </div>
+            <button
+              v-if="form.donationHistory.length > displayLimit && !showAllDonations"
+              class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+              @click="showAllDonations = true"
+            >
+              显示更多（共 {{ form.donationHistory.length }} 条记录）
+            </button>
+            <button
+              v-if="showAllDonations"
+              class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+              @click="showAllDonations = false"
+            >
+              收起
+            </button>
           </div>
         </div>
 
@@ -455,14 +468,10 @@
           </div>
         </div>
 
-        <!-- 错误提示 -->
         <!-- 错误/成功提示 -->
         <div
           v-if="errorMessage"
-          :class="{
-            'bg-red-100 border-red-400 text-red-700': errorMessageType === 'error',
-            'bg-green-100 border-green-400 text-green-700': errorMessageType === 'success'
-          }"
+          :class="{ 'bg-red-100 border-red-400 text-red-700': errorMessageType === 'error', 'bg-green-100 border-green-400 text-green-700': errorMessageType === 'success' }"
           aria-live="assertive"
           class="mb-6 p-4 border rounded-lg text-sm"
           role="alert"
@@ -521,11 +530,12 @@ import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '@/stores/user'
 import userApi from '@/api/user'
+import projectApi from '@/api/project'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-// 表单数据（仅个体用户字段）
+// 表单数据
 const form = ref({
   username: '',
   phoneNumber: '',
@@ -559,7 +569,15 @@ const historyDetails = ref({
   donation: {},
   assistance: {}
 })
-const errorMessageType = ref('error') // 新增：error 或 success
+const errorMessageType = ref('error')
+const showAllDonations = ref(false)
+const displayLimit = 3
+const projectNames = ref({})
+
+// 计算显示的捐赠历史
+const displayedDonationHistory = computed(() => {
+  return showAllDonations.value ? form.value.donationHistory : form.value.donationHistory.slice(0, displayLimit)
+})
 
 // 提交按钮禁用状态
 const isSubmitDisabled = computed(() => {
@@ -654,14 +672,14 @@ const handleAvatarUpload = async (event) => {
     try {
       const formData = new FormData()
       formData.append('avatar', avatarFile.value)
-      form.value.avatar = await userApi.uploadAvatar(userStore.userId, formData) // 更新头像 URL
-      setFlashError('头像上传成功', 3000, 'success') // 提示成功
+      form.value.avatar = await userApi.uploadAvatar(userStore.userId, formData)
+      setFlashError('头像上传成功', 3000, 'success')
     } catch (error) {
       console.error('头像上传失败:', error)
       avatarError.value = error.message || '头像上传失败，请重试'
       setFlashError(avatarError.value)
-      form.value.avatar = '' // 清除无效头像
-      avatarFile.value = null // 清除文件
+      form.value.avatar = ''
+      avatarFile.value = null
     }
   } else {
     form.value.avatar = ''
@@ -681,9 +699,7 @@ const handleVerifyIdentity = async () => {
       userRealName: form.value.userRealName,
       idCardNumber: form.value.idCardNumber
     }
-    console.log(payload)
     const response = await userApi.individualVerify(payload)
-    console.log(response)
     if (response === '身份认证成功') {
       isVerified.value = true
       setFlashError('实名认证成功', 3000, 'success')
@@ -712,6 +728,22 @@ const formatDate = (date) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 获取项目名称
+const fetchProjectNames = async (projectIds) => {
+  try {
+    const uniqueIds = [...new Set(projectIds)]
+    const promises = uniqueIds.map(id => projectApi.getProjectDetail(id))
+    const results = await Promise.all(promises)
+    results.forEach(project => {
+      if (project && project.projectId) {
+        projectNames.value[project.projectId] = project.projectName
+      }
+    })
+  } catch (error) {
+    console.error('获取项目名称失败:', error)
+  }
 }
 
 // 运行所有验证
@@ -751,13 +783,9 @@ const handleSubmit = async () => {
     const userData = await userApi.updateIndividual(payload)
     userStore.setUserData(userData)
     setFlashError('资料保存成功', 3000, 'success')
-    // setTimeout(() => {
-    //   router.push('/')
-    // }, 1000)
   } catch (error) {
     console.error('保存资料失败:', error)
-    errorMessage.value = error.message || '保存资料失败，请稍后重试'
-    setFlashError(errorMessage.value)
+    setFlashError(error.message || '保存资料失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -767,7 +795,7 @@ const handleSubmit = async () => {
 let errorTimeout = null
 const setFlashError = (message, duration = 3000, type = 'error') => {
   errorMessage.value = message
-  errorMessageType.value = type // 新增类型状态
+  errorMessageType.value = type
   if (errorTimeout) clearTimeout(errorTimeout)
   errorTimeout = setTimeout(() => {
     errorMessage.value = ''
@@ -790,11 +818,16 @@ onMounted(async () => {
     form.value.userBankAccount = userData.userBankAccount || ''
     form.value.donationHistory = userData.donationHistory ? JSON.parse(userData.donationHistory) : []
     form.value.assistanceHistory = userData.assistanceHistory ? JSON.parse(userData.assistanceHistory) : []
-    isVerified.value = !!(userData.userRealName && userData.idCardNumber) // 假设已填写即认证
+    isVerified.value = !!(userData.userRealName && userData.idCardNumber)
+
+    // 获取项目名称
+    if (form.value.donationHistory.length > 0) {
+      const projectIds = form.value.donationHistory.map(record => record.projectId)
+      await fetchProjectNames(projectIds)
+    }
   } catch (error) {
     console.error('加载用户资料失败:', error)
-    errorMessage.value = '加载用户资料失败，请稍后重试'
-    setFlashError(errorMessage.value)
+    setFlashError('加载用户资料失败，请稍后重试')
   }
 })
 

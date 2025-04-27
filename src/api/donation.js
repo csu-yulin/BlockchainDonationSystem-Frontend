@@ -34,4 +34,8 @@ export default {
   getDonationAmount() {
     return request.get('/donation/amount')
   },
+  //支付宝沙箱支付
+  pay(data) {
+    return request.get('/donation/pay', {params: data})
+  }
 }

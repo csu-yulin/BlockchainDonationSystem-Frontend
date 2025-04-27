@@ -30,13 +30,29 @@
             项目
           </router-link>
         </li>
-        <li>
-          <a
+        <li v-if="userStore.role === 'ORG'">
+          <router-link
             class="relative text-gray-700 text-lg font-medium hover:text-indigo-600 transition-colors duration-300 after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-indigo-600 after:transition-all after:duration-300 hover:after:w-full"
-            href="#about"
+            to="/org/dashboard"
+          >
+            项目管理
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="relative text-gray-700 text-lg font-medium hover:text-indigo-600 transition-colors duration-300 after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-indigo-600 after:transition-all after:duration-300 hover:after:w-full"
+            to="/hash-verification"
+          >
+            交易校验
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="relative text-gray-700 text-lg font-medium hover:text-indigo-600 transition-colors duration-300 after:content-[''] after:absolute after:left-0 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-indigo-600 after:transition-all after:duration-300 hover:after:w-full"
+            to="/about"
           >
             关于
-          </a>
+          </router-link>
         </li>
         <li v-if="!userStore.userId">
           <router-link
@@ -116,6 +132,24 @@
             @click="toggleMenu"
           >
             项目
+          </router-link>
+        </li>
+        <li v-if="userStore.role === 'ORG'">
+          <router-link
+            class="block text-gray-700 hover:text-indigo-600 transition-colors duration-300"
+            to="/org/dashboard"
+            @click="toggleMenu"
+          >
+            项目管理
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            class="block text-gray-700 hover:text-indigo-600 transition-colors duration-300"
+            to="/hash-verification"
+            @click="toggleMenu"
+          >
+            交易校验
           </router-link>
         </li>
         <li>

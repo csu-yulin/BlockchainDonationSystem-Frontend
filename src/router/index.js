@@ -14,6 +14,12 @@ const routes = [
     meta: {requiresAuth: true}, // 需要登录
   },
   {
+    path: '/project/:id',
+    name: 'ProjectDetail',
+    component: () => import('@/views/ProjectDetail.vue'),
+    meta: {requiresAuth: true},
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
@@ -40,6 +46,33 @@ const routes = [
     component: () => import('@/views/OrgProfileEdit.vue'),
     meta: {requiresAuth: true, role: 'ORG'}
   },
+  {
+    path: '/hash-verification/:transactionHash?',
+    name: 'HashVerification',
+    component: () => import('@/views/HashVerification.vue'),
+    meta: {requiresAuth: true},
+  },
+  {
+    path: '/voucher/:projectId',
+    name: 'VoucherDetail',
+    component: () => import('@/views/VoucherDetail.vue')
+  },
+  {
+    path: '/org/dashboard',
+    name: 'OrgDashboard',
+    component: () => import('@/views/OrgDashboard.vue'),
+    meta: {requiresAuth: true, role: 'ORG'} // 限制公益组织访问
+  },
+  {
+    path: '/org/assistance/review',
+    name: 'AssistanceReview',
+    component: () => import('@/views/AssistanceReview.vue')
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/views/About.vue')
+  }
 ]
 
 const router = createRouter({
